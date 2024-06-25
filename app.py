@@ -112,7 +112,7 @@ def visualisasi_data():
 st.title("Rekomendasi Tempat Wisata di Indonesia")
 
 # Pilihan tab
-tabs = ["Sistem Rekomendasi Wisata", "Filter berdasarkan User", "Visualisasi Data"]
+tabs = ["Sistem Rekomendasi Wisata", "Visualisasi Data"]
 choice = st.sidebar.radio("Pilihan Menu", tabs)
 
 # Tampilkan tab yang dipilih
