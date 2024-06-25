@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import tensorflow as tf
+from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -82,65 +84,60 @@ x_train, x_val, y_train, y_val = x[:train_indices], x[train_indices:], y[:train_
 
 # Define the RecommenderNet model
 class RecommenderNet(tf.keras.Model):
+    def __init__(self, num_users, num_places, embedding_size, **kwargs):
+        super(RecommenderNet, self).__init__(**kwargs)
+        self.num_users = num_users
+        self.num_places = num_places
+        self.embedding_size = embedding_size
+        self.user_embedding = layers.Embedding(
+            num_users,
+            embedding_size,
+            embeddings_initializer='he_normal',
+            embeddings_regularizer=tf.keras.regularizers.l2(1e-6)
+        )
+        self.user_bias = layers.Embedding(num_users, 1)
+        self.places_embedding = layers.Embedding(
+            num_places,
+            embedding_size,
+            embeddings_initializer='he_normal',
+            embeddings_regularizer=tf.keras.regularizers.l2(1e-6)
+        )
+        self.places_bias = layers.Embedding(num_places, 1)
 
-  # Insialisasi fungsi
-  def __init__(self, num_users, num_places, embedding_size, **kwargs):
-    super(RecommenderNet, self).__init__(**kwargs)
-    self.num_users = num_users
-    self.num_places = num_places
-    self.embedding_size = embedding_size
-    self.user_embedding = layers.Embedding( # layer embedding user
-        num_users,
-        embedding_size,
-        embeddings_initializer = 'he_normal',
-        embeddings_regularizer = keras.regularizers.l2(1e-6)
-    )
-    self.user_bias = layers.Embedding(num_users, 1) # layer embedding user bias
-    self.places_embedding = layers.Embedding( # layer embeddings places
-        num_places,
-        embedding_size,
-        embeddings_initializer = 'he_normal',
-        embeddings_regularizer = keras.regularizers.l2(1e-6)
-    )
-    self.places_bias = layers.Embedding(num_places, 1) # layer embedding places bias
+    def call(self, inputs):
+        user_vector = self.user_embedding(inputs[:, 0])
+        user_bias = self.user_bias(inputs[:, 0])
+        places_vector = self.places_embedding(inputs[:, 1])
+        places_bias = self.places_bias(inputs[:, 1])
 
-  def call(self, inputs):
-    user_vector = self.user_embedding(inputs[:,0]) # memanggil layer embedding 1
-    user_bias = self.user_bias(inputs[:, 0]) # memanggil layer embedding 2
-    places_vector = self.places_embedding(inputs[:, 1]) # memanggil layer embedding 3
-    places_bias = self.places_bias(inputs[:, 1]) # memanggil layer embedding 4
+        dot_user_places = tf.tensordot(user_vector, places_vector, 2)
+        x = dot_user_places + user_bias + places_bias
+        return tf.nn.sigmoid(x)
 
-    dot_user_places = tf.tensordot(user_vector, places_vector, 2)
+model = RecommenderNet(num_users, num_place, 50)
 
-    x = dot_user_places + user_bias + places_bias
-
-    return tf.nn.sigmoid(x) # activation sigmoid
-
-model = RecommenderNet(num_users, num_place, 50) # inisialisasi model
-
-# model compile
+# Compile the model
 model.compile(
-    loss = tf.keras.losses.BinaryCrossentropy(),
-    optimizer = keras.optimizers.Adam(learning_rate=0.0004),
+    loss=tf.keras.losses.BinaryCrossentropy(),
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.0004),
     metrics=[tf.keras.metrics.RootMeanSquaredError()]
 )
 
- class myCallback(tf.keras.callbacks.Callback):
-  def on_epoch_end(self, epoch, logs={}):
-    if(logs.get('val_root_mean_squared_error')<0.25):
-      print('Lapor! Metriks validasi sudah sesuai harapan')
-      self.model.stop_training = True
+# Callback for early stopping
+class myCallback(tf.keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        if logs.get('val_root_mean_squared_error') < 0.25:
+            print('Lapor! Metriks validasi sudah sesuai harapan')
+            self.model.stop_training = True
 
-# Memulai training
-
+# Train the model
 history = model.fit(
-    x = x_train,
-    y = y_train,
-    epochs = 100,
-    validation_data = (x_val, y_val),
-    callbacks = [myCallback()]
+    x=x_train,
+    y=y_train,
+    epochs=100,
+    validation_data=(x_val, y_val),
+    callbacks=[myCallback()]
 )
-
 
 # Tab pertama: Filter Tempat Wisata
 def filter_places():
@@ -216,7 +213,6 @@ def filter_by_user():
         st.write(f"{i}. {row.place_name}\n    {row.category}, Harga Tiket Masuk {row.price}, Rating Wisata {row.rating}\n")
     
     st.write("===" * 15)
-
 
 # Tab ketiga: Visualisasi Data
 def visualisasi_data():
