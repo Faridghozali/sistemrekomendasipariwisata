@@ -79,18 +79,7 @@ def filter_places():
 def visualisasi_data():
     viz_choice = st.radio("Pilih Visualisasi:", ("Tempat Wisata Terpopuler", "Perbandingan Kategori Wisata", "Distribusi Usia User", "Distribusi Harga Tiket Masuk", "Asal Kota Pengunjung"))
 
-    if viz_choice == "Tempat Wisata Terpopuler":
-        # Tempat wisata dengan jumlah rating terbanyak
-        top_10 = rating['Place_Id'].value_counts().reset_index().head(10)
-        top_10 = pd.merge(top_10, place[['Place_Id', 'Place_Name']], how='left', left_on='Place_Id', right_on='Place_Id')
-        plt.figure(figsize=(8, 5))
-        sns.barplot(x='index', y='Place_Id', data=top_10)
-        plt.title('Jumlah Tempat Wisata dengan Rating Terbanyak', pad=20)
-        plt.ylabel('Jumlah Rating')
-        plt.xlabel('Nama Lokasi')
-        st.pyplot(plt)
-
-    elif viz_choice == "Perbandingan Kategori Wisata":
+    if viz_choice == "Perbandingan Kategori Wisata":
         # Perbandingan jumlah kategori wisata
         plt.figure(figsize=(8, 5))
         sns.countplot(y='Category', data=place)
