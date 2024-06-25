@@ -52,6 +52,8 @@ def filter_places():
     
     categories = st.selectbox('Kategori wisata', place['Category'].unique())
     cities = st.selectbox('Lokasi kamu', place['City'].unique())
+    top_n = st.slider('Tampilkan top-n hasil:', min_value=1, max_value=10, value=5)
+    show_all = st.checkbox('Tampilkan semua hasil')
 
     # Tampilkan hasil filter hanya jika semua inputan sudah terisi
     if name and age and categories and cities:
@@ -63,6 +65,9 @@ def filter_places():
         if len(filtered_data) == 0:
             st.write('Mohon maaf, tidak ada rekomendasi tempat wisata yang sesuai dengan preferensi Kamu saat ini.')
         else:
+            # Sort data by Rating
+            filtered_data = filtered_data.sort_values(by='Rating', ascending=False)
+
             # Rename columns for display
             filtered_data_display = filtered_data.rename(columns={
                 'Place_Name': 'Nama_Tempat',
@@ -71,7 +76,12 @@ def filter_places():
                 'Price': 'Harga',
                 'Rating': 'Rating'
             })
-            st.write(filtered_data_display[['Nama_Tempat', 'Kategori', 'Lokasi', 'Harga', 'Rating']])
+            
+            # Display top-n or all results
+            if show_all:
+                st.write(filtered_data_display[['Nama_Tempat', 'Kategori', 'Lokasi', 'Harga', 'Rating']])
+            else:
+                st.write(filtered_data_display[['Nama_Tempat', 'Kategori', 'Lokasi', 'Harga', 'Rating']].head(top_n))
     else:
         st.write('Silakan lengkapi semua input untuk melihat rekomendasi tempat wisata.')
 
