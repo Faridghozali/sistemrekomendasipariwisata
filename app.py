@@ -47,7 +47,7 @@ st.markdown(page_bg_img, unsafe_allow_html=True)
 place = place.drop(['Unnamed: 11', 'Unnamed: 12'], axis=1)
 place = place.drop('Time_Minutes', axis=1)
 
-# Filter ratings for places 
+# Filter ratings for places
 rating = pd.merge(rating, place[['Place_Id']], how='right', on='Place_Id')
 
 # Filter users who have visited places
@@ -82,8 +82,8 @@ x_train, x_val, y_train, y_val = x[:train_indices], x[train_indices:], y[:train_
 
 # Define the RecommenderNet model
 class RecommenderNet(tf.keras.Model):
-    def init(self, num_users, num_places, embedding_size, **kwargs):
-        super(RecommenderNet, self).init(**kwargs)
+    def __init__(self, num_users, num_places, embedding_size, **kwargs):
+        super(RecommenderNet, self).__init__(**kwargs)
         self.num_users = num_users
         self.num_places = num_places
         self.embedding_size = embedding_size
@@ -114,6 +114,7 @@ class myCallback(tf.keras.callbacks.Callback):
             self.model.stop_training = True
 
 history = model.fit(x_train, y_train, epochs=100, validation_data=(x_val, y_val), callbacks=[myCallback()])
+
 
 # Tab pertama: Filter Tempat Wisata
 def filter_places():
