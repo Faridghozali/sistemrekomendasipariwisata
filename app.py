@@ -88,9 +88,17 @@ class RecommenderNet(tf.keras.Model):
         self.num_users = num_users
         self.num_places = num_places
         self.embedding_size = embedding_size
-        self.user_embedding = layers.Embedding(num_users, embedding_size, embeddings_initializer='he_normal', embeddings_regularizer=tf.keras.regularizers.l2(1e-6))
+        self.user_embedding = layers.Embedding(
+            num_users, embedding_size,
+            embeddings_initializer='he_normal',
+            embeddings_regularizer=tf.keras.regularizers.l2(1e-6)
+        )
         self.user_bias = layers.Embedding(num_users, 1)
-        self.places_embedding = layers.Embedding(num_places, embedding_size, embeddings_initializer='he_normal', embeddings_regularizer=tf.keras.regularizers.l2(1e-6))
+        self.places_embedding = layers.Embedding(
+            num_places, embedding_size,
+            embeddings_initializer='he_normal',
+            embeddings_regularizer=tf.keras.regularizers.l2(1e-6)
+        )
         self.places_bias = layers.Embedding(num_places, 1)
 
     def call(self, inputs):
@@ -102,20 +110,28 @@ class RecommenderNet(tf.keras.Model):
         x = dot_user_places + user_bias + places_bias
         return tf.nn.sigmoid(x)
 
+# Instantiate and compile the model
 model = RecommenderNet(num_users, num_place, 50)
+model.compile(
+    loss=tf.keras.losses.BinaryCrossentropy(),
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.0004),
+    metrics=[tf.keras.metrics.RootMeanSquaredError()]
+)
 
-# Compile the model
-model.compile(loss=tf.keras.losses.BinaryCrossentropy(), optimizer=tf.keras.optimizers.Adam(learning_rate=0.0004), metrics=[tf.keras.metrics.RootMeanSquaredError()])
-
-# Train the model
+# Define the callback
 class myCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         if logs.get('val_root_mean_squared_error') < 0.25:
             print('Lapor! Metriks validasi sudah sesuai harapan')
             self.model.stop_training = True
 
-history = model.fit(x_train, y_train, epochs=100, validation_data=(x_val, y_val), callbacks=[myCallback()])
-
+# Train the model
+history = model.fit(
+    x_train, y_train,
+    epochs=100,
+    validation_data=(x_val, y_val),
+    callbacks=[myCallback()]
+)
 # Tab pertama: Filter Tempat Wisata
 def filter_places():
     # Input user for name and age
