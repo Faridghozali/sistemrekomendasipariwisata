@@ -81,10 +81,6 @@ y = df['Place_Ratings'].apply(lambda x: (x - min_rating) / (max_rating - min_rat
 train_indices = int(0.8 * df.shape[0])
 x_train, x_val, y_train, y_val = x[:train_indices], x[train_indices:], y[:train_indices], y[train_indices:]
 
-
-# Compile the model
-model.compile(loss=tf.keras.losses.BinaryCrossentropy(), optimizer=tf.keras.optimizers.Adam(learning_rate=0.0004), metrics=[tf.keras.metrics.RootMeanSquaredError()])
-
 # Train the model
 class myCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
