@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
 
 # Load dataset
 def load_data():
@@ -54,42 +53,6 @@ rating = pd.merge(rating, place[['Place_Id']], how='right', on='Place_Id')
 # Filter users who have visited places
 user = pd.merge(user, rating[['User_Id']], how='right', on='User_Id').drop_duplicates().sort_values('User_Id')
 
-# Encoding function
-def dict_encoder(col, data):
-    unique_val = data[col].unique().tolist()
-    val_to_val_encoded = {x: i for i, x in enumerate(unique_val)}
-    val_encoded_to_val = {i: x for i, x in enumerate(unique_val)}
-    return val_to_val_encoded, val_encoded_to_val
-
-# Encoding User_Id and Place_Id
-user_to_user_encoded, user_encoded_to_user = dict_encoder('User_Id', rating)
-place_to_place_encoded, place_encoded_to_place = dict_encoder('Place_Id', rating)
-
-rating['user'] = rating['User_Id'].map(user_to_user_encoded)
-rating['place'] = rating['Place_Id'].map(place_to_place_encoded)
-
-num_users, num_place = len(user_to_user_encoded), len(place_to_place_encoded)
-rating['Place_Ratings'] = rating['Place_Ratings'].values.astype(np.float32)
-min_rating, max_rating = min(rating['Place_Ratings']), max(rating['Place_Ratings'])
-
-# Shuffle the dataset
-df = rating.sample(frac=1, random_state=42)
-
-# Prepare training and validation data
-x = df[['user', 'place']].values
-y = df['Place_Ratings'].apply(lambda x: (x - min_rating) / (max_rating - min_rating)).values
-train_indices = int(0.8 * df.shape[0])
-x_train, x_val, y_train, y_val = x[:train_indices], x[train_indices:], y[:train_indices], y[train_indices:]
-
-# Train the model
-class myCallback(tf.keras.callbacks.Callback):
-    def on_epoch_end(self, epoch, logs=None):
-        if logs.get('val_root_mean_squared_error') < 0.25:
-            print('Lapor! Metriks validasi sudah sesuai harapan')
-            self.model.stop_training = True
-
-history = model.fit(x_train, y_train, epochs=100, validation_data=(x_val, y_val), callbacks=[myCallback()])
-
 # Tab pertama: Filter Tempat Wisata
 def filter_places():
     # Input user for name and age
@@ -128,7 +91,7 @@ def filter_by_user():
     place_df = place[['Place_Id', 'Place_Name', 'Category', 'Rating', 'Price']]
     place_df.columns = ['id', 'place_name', 'category', 'rating', 'price']
     
-    place_visited_by_user = df[df.User_Id == user_id]
+    place_visited_by_user = rating[rating.User_Id == user_id]
     place_not_visited = place_df[~place_df['id'].isin(place_visited_by_user.Place_Id.values)]['id']
     place_not_visited = list(set(place_not_visited).intersection(set(place_to_place_encoded.keys())))
     place_not_visited = [[place_to_place_encoded.get(x)] for x in place_not_visited]
