@@ -81,27 +81,6 @@ y = df['Place_Ratings'].apply(lambda x: (x - min_rating) / (max_rating - min_rat
 train_indices = int(0.8 * df.shape[0])
 x_train, x_val, y_train, y_val = x[:train_indices], x[train_indices:], y[:train_indices], y[train_indices:]
 
-# Define the RecommenderNet model
-class RecommenderNet(tf.keras.Model):
-    def __init__(self, num_users, num_places, embedding_size, **kwargs):
-        super(RecommenderNet, self).__init__(**kwargs)
-        self.num_users = num_users
-        self.num_places = num_places
-        self.embedding_size = embedding_size
-        self.user_embedding = layers.Embedding(num_users, embedding_size, embeddings_initializer='he_normal', embeddings_regularizer=tf.keras.regularizers.l2(1e-6))
-        self.user_bias = layers.Embedding(num_users, 1)
-        self.places_embedding = layers.Embedding(num_places, embedding_size, embeddings_initializer='he_normal', embeddings_regularizer=tf.keras.regularizers.l2(1e-6))
-        self.places_bias = layers.Embedding(num_places, 1)
-
-    def call(self, inputs):
-        user_vector = self.user_embedding(inputs[:, 0])
-        user_bias = self.user_bias(inputs[:, 0])
-        places_vector = self.places_embedding(inputs[:, 1])
-        places_bias = self.places_bias(inputs[:, 1])
-        dot_user_places = tf.tensordot(user_vector, places_vector, 2)
-        x = dot_user_places + user_bias + places_bias
-        return tf.nn.sigmoid(x)
-
 model = RecommenderNet(num_users, num_place, 50)
 
 # Compile the model
