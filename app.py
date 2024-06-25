@@ -77,7 +77,7 @@ def filter_places():
 
 # Tab kedua: Visualisasi Data
 def visualisasi_data():
-    viz_choice = st.radio("Pilih Visualisasi:", ("Tempat Wisata Terpopuler", "Perbandingan Kategori Wisata", "Distribusi Usia User", "Distribusi Harga Tiket Masuk", "Asal Kota Pengunjung"))
+    viz_choice = st.radio("Pilih Visualisasi:", ( "Perbandingan Kategori Wisata", "Distribusi Usia User", "Distribusi Harga Tiket Masuk", "Asal Kota Pengunjung"))
 
     if viz_choice == "Perbandingan Kategori Wisata":
         # Perbandingan jumlah kategori wisata
